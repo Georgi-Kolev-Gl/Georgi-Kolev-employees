@@ -5,7 +5,7 @@
 
     reader.addEventListener("load", (e) => {
       const text = e.target.result;
-      const allSomething = [];
+      const allData = [];
       const today = new Date();
       const allProjectsWithAtLeastTwoEmployees = [];
 
@@ -20,28 +20,28 @@
           });
         return result;
       }
-      splitString(text, allSomething);
+      splitString(text, allData);
 
       function getAllProjects(arrayOfAllProject) {
-        const allProjects = arrayOfAllProject.reduce((acc, something) => {
+        const allProjects = arrayOfAllProject.reduce((acc, row) => {
           const existingProject = acc.find(
-            (project) => project.projId === something.projId
+            (project) => project.projId === row.projId
           );
 
           if (existingProject) {
             existingProject.workTime.push({
-              empId: something.empId,
-              startTime: something.startTime,
-              endTime: something.endTime,
+              empId: row.empId,
+              startTime: row.startTime,
+              endTime: row.endTime,
             });
           } else {
             acc.push({
-              projId: something.projId,
+              projId: row.projId,
               workTime: [
                 {
-                  empId: something.empId,
-                  startTime: something.startTime,
-                  endTime: something.endTime,
+                  empId: row.empId,
+                  startTime: row.startTime,
+                  endTime: row.endTime,
                 },
               ],
               teamwork: [],
@@ -53,14 +53,15 @@
         return allProjects;
       }
 
-      const allProjects = getAllProjects(allSomething);
+      const allProjects = getAllProjects(allData);
 
       allProjects.forEach((proj) => {
         if (proj.workTime.length > 1) {
           allProjectsWithAtLeastTwoEmployees.push(proj);
         }
       });
-      function getAllprojectswithThoEmpl(obj) {
+    
+      function getAllProjectsWithMinTwoEmployees(obj) {
         obj.forEach((project) => {
           for (let i = 0; i < project.workTime.length - 1; i++) {
             for (let j = i + 1; j < project.workTime.length; j++) {
@@ -115,7 +116,7 @@
               let stopTime;
               if (
                 startDateSecond > startDateFirst ||
-                (startDateFirst - startDateSecond === 0 &&
+                (Math.round(startDateFirst - startDateSecond) === 0 &&
                   startDateSecond < endDateFirst)
               ) {
                 startTime = startDateSecond;
@@ -127,7 +128,7 @@
               }
               if (
                 startDateFirst > startDateSecond ||
-                (startDateFirst - startDateSecond === 0 &&
+                (Math.round(startDateFirst - startDateSecond) === 0 &&
                   startDateFirst < endDateSecond)
               ) {
                 startTime = startDateFirst;
@@ -149,27 +150,30 @@
             }
           }
         });
+
         return obj;
       }
-      getAllprojectswithThoEmpl(allProjectsWithAtLeastTwoEmployees);
 
-      function getAllCouplesWorkedOnCommonProj(obj) {
-        let couplesWorkedOnCommonProj = [];
+      getAllProjectsWithMinTwoEmployees(allProjectsWithAtLeastTwoEmployees);
+
+      function getAllCouplesWorkedOnCommonProject(obj) {
+        let couplesWorkedOnCommonProject = [];
         obj.forEach((project) => {
           project.teamwork.forEach((el) => {
-            couplesWorkedOnCommonProj.push(el);
+            couplesWorkedOnCommonProject.push(el);
           });
         });
-        return couplesWorkedOnCommonProj;
+        return couplesWorkedOnCommonProject;
       }
-      let allCouplesWorkedOnCommonProj = getAllCouplesWorkedOnCommonProj(
+      let allCouplesWorkedOnCommonProject = getAllCouplesWorkedOnCommonProject(
         allProjectsWithAtLeastTwoEmployees
       );
 
-      function findeMaxDayOfWork(obj) {
+      function findMaxDayOfWork(obj) {
         let result = {};
         let maxDayOfWork = -Infinity;
         obj.forEach((el, index) => {
+          let isThereSameWorkingCopple = false;  
           let sumOfWorkDay = 0;
           for (let i = index + 1; i < obj.length; i++) {
             if (
@@ -178,8 +182,12 @@
               (el.empIdSecond === obj[i].empIdSecond ||
                 el.empIdSecond === obj[i].empIdFirst)
             ) {
+              isThereSameWorkingCopple = true;  
               sumOfWorkDay += el.dayOfTeamwork + obj[i].dayOfTeamwork;
             }
+          }
+          if (!isThereSameWorkingCopple) {
+            sumOfWorkDay = el.dayOfTeamwork
           }
           if (maxDayOfWork < sumOfWorkDay) {
             maxDayOfWork = sumOfWorkDay;
@@ -191,19 +199,19 @@
         return result;
       }
 
-      let employeesWithMostWorkingDays = findeMaxDayOfWork(
-        allCouplesWorkedOnCommonProj
+      let employeesWithMostWorkingDays = findMaxDayOfWork(
+        allCouplesWorkedOnCommonProject
       );
 
-      let s = [];
-      allCouplesWorkedOnCommonProj.forEach((el) => {
+      let coupleWithMOstWorkingDays = [];
+      allCouplesWorkedOnCommonProject.forEach((el) => {
         if (
           (employeesWithMostWorkingDays.empIdFirst === el.empIdFirst ||
             employeesWithMostWorkingDays.empIdFirst === el.empIdSecond) &&
           (employeesWithMostWorkingDays.empIdSecond === el.empIdFirst ||
             employeesWithMostWorkingDays.empIdSecond === el.empIdSecond)
         ) {
-          s.push(el);
+            coupleWithMOstWorkingDays.push(el);
         }
       });
 
@@ -241,7 +249,7 @@
         containerToPrint.append(newTable);
       }
       const container = document.getElementById("container");
-      printrResult(s, container);
+      printrResult(coupleWithMOstWorkingDays, container);
     });
 
     reader.readAsText(file);
